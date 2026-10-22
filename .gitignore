@@ -1,0 +1,47 @@
+# Python virtual environments & bytecode
+.venv/
+venv/
+env/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & Databases
+*.log
+logs/
+backend/logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# Large Dataset Arrays (GitHub limit is 100MB)
+backend/data/raw/*.csv
+backend/data/processed/*.npy
+
+# Preserve lightweight runtime inference pipeline assets
+!backend/data/processed/preprocessing_pipeline.joblib
+!backend/data/processed/feature_names.json
+!backend/data/processed/dataset_summary.json
+!backend/data/processed/.gitkeep
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node / Frontend Build & Environment
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+build/
+.env
+frontend/.env
+!.env.example
+!frontend/.env.example

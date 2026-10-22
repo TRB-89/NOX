@@ -1,0 +1,47 @@
+{
+  "project": "N\u00d8X \u2014 Neural Network Intrusion Detection System",
+  "evaluation_target": "Official UNSW-NB15 Untouched Test Partition (UNSW_NB15_testing-set.csv)",
+  "test_sample_count": 82332,
+  "threat_classification_threshold": 0.5,
+  "threshold_selection_method": "Validation set F1 optimization",
+  "mlp_model_performance": {
+    "accuracy": 0.8569329057960453,
+    "precision": 0.8047336203295007,
+    "recall": 0.977300802964793,
+    "f1_score": 0.8826617522538228,
+    "false_positive_rate": 0.2905405405405405,
+    "roc_auc": 0.9756935814089921,
+    "confusion_matrix": {
+      "tn": 26250,
+      "fp": 10750,
+      "fn": 1029,
+      "tp": 44303
+    },
+    "threshold_used": 0.5
+  },
+  "logistic_regression_baseline_performance": {
+    "accuracy": 0.8093936743914881,
+    "precision": 0.7532598479022473,
+    "recall": 0.9723153622165358,
+    "f1_score": 0.8488834535422304,
+    "false_positive_rate": 0.3902162162162162,
+    "roc_auc": 0.9555915307127475,
+    "confusion_matrix": {
+      "tn": 22562,
+      "fp": 14438,
+      "fn": 1255,
+      "tp": 44077
+    },
+    "threshold_used": 0.5
+  },
+  "comparison_summary": {
+    "f1_delta": 0.0338,
+    "accuracy_delta": 0.0475,
+    "fpr_delta": -0.0997,
+    "empirical_analysis": "Empirical comparison between the non-linear Multilayer Perceptron and the linear Logistic Regression baseline. Metrics reflect genuine evaluation on the standardized UNSW-NB15 benchmark."
+  },
+  "generated_plots": {
+    "confusion_matrix": "C:\\Users\\TRB\\modified mindspace sdg\\CrediAI\\NOX\\backend\\outputs\\plots\\confusion_matrix.png",
+    "roc_curve": "C:\\Users\\TRB\\modified mindspace sdg\\CrediAI\\NOX\\backend\\outputs\\plots\\roc_curve.png"
+  }
+}

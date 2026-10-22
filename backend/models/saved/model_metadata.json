@@ -1,0 +1,70 @@
+{
+  "model_name": "N\u00d8X-MLP-v1",
+  "model_version": "1.0.0",
+  "date_trained": "2026-10-22T17:23:41.163608+00:00",
+  "framework": "PyTorch 2.14.1+cpu",
+  "device_used": "cpu",
+  "random_seed": 42,
+  "architecture": {
+    "model_type": "Multilayer Perceptron (MLP)",
+    "input_dim": 192,
+    "hidden_layers": [
+      {
+        "layer": "Linear(input_dim, 128)",
+        "activation": "ReLU",
+        "dropout": 0.3
+      },
+      {
+        "layer": "Linear(128, 64)",
+        "activation": "ReLU",
+        "dropout": 0.2
+      },
+      {
+        "layer": "Linear(64, 1)",
+        "output": "Binary Logit"
+      }
+    ],
+    "total_parameters": 33025,
+    "classes": {
+      "0": "Normal Network Traffic",
+      "1": "Potential Malicious Network Traffic"
+    }
+  },
+  "input_feature_count": 192,
+  "hyperparameters": {
+    "max_epochs": 30,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "optimizer": "Adam",
+    "loss_function": "BCEWithLogitsLoss",
+    "patience": 5,
+    "use_pos_weight": false
+  },
+  "best_epoch": 13,
+  "total_epochs_run": 18,
+  "selected_threshold": 0.5,
+  "best_validation_metrics": {
+    "validation_f1": 0.9615153461960915,
+    "validation_accuracy": 0.947047249707719,
+    "validation_precision": 0.9513615485564304,
+    "validation_recall": 0.9718882232184004,
+    "validation_loss": 0.11039594115726098,
+    "train_loss": 0.11479918401910572
+  },
+  "note": "UNSW-NB15 historical network benchmark model. Offline intrusion classification.",
+  "final_test_metrics": {
+    "accuracy": 0.8569329057960453,
+    "precision": 0.8047336203295007,
+    "recall": 0.977300802964793,
+    "f1_score": 0.8826617522538228,
+    "false_positive_rate": 0.2905405405405405,
+    "roc_auc": 0.9756935814089921,
+    "confusion_matrix": {
+      "tn": 26250,
+      "fp": 10750,
+      "fn": 1029,
+      "tp": 44303
+    },
+    "threshold_used": 0.5
+  }
+}

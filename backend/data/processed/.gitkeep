@@ -1,0 +1,3 @@
+# Processed dataset storage directory
+# Output files: X_train.npy, X_val.npy, X_test.npy, y_train.npy, y_val.npy, y_test.npy,
+# preprocessing_pipeline.joblib, feature_names.json, dataset_summary.json

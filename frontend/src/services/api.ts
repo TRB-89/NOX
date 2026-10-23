@@ -7,13 +7,21 @@ import {
   FlowRecord,
 } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const rawBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) || 'http://127.0.0.1:8000';
 
 class ApiService {
   private baseUrl: string;
 
   constructor(baseUrl: string) {
-    this.baseUrl = baseUrl.replace(/\/+$/, '');
+    this.baseUrl = baseUrl.trim().replace(/\/+$/, '');
+  }
+
+  getBaseUrl(): string {
+    return this.baseUrl;
+  }
+
+  isLocalhost(): boolean {
+    return this.baseUrl.includes('127.0.0.1') || this.baseUrl.includes('localhost');
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
@@ -34,8 +42,16 @@ class ApiService {
 
       return (await response.json()) as T;
     } catch (err: any) {
-      if (err.name === 'TypeError' && err.message.includes('fetch')) {
-        throw new Error('Backend unavailable. Start the NØX FastAPI server to enable detection.');
+      const msg = err.message?.toLowerCase() || '';
+      if (
+        err.name === 'TypeError' ||
+        msg.includes('fetch') ||
+        msg.includes('network') ||
+        msg.includes('failed')
+      ) {
+        throw new Error(
+          'NØX backend is unreachable. If deployed on Render free tier, the instance may be cold-starting (spin-up takes ~60-90s). Please wait a moment and retry.'
+        );
       }
       throw err;
     }
@@ -88,4 +104,4 @@ class ApiService {
   }
 }
 
-export const api = new ApiService(API_BASE_URL);
+export const api = new ApiService(rawBaseUrl);

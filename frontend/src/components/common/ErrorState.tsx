@@ -9,7 +9,7 @@ interface ErrorStateProps {
 
 export const ErrorState: React.FC<ErrorStateProps> = ({
   title = 'SYSTEM TELEMETRY ERROR',
-  message = 'Failed to connect to the NØX FastAPI backend. Verify server is running on 127.0.0.1:8000.',
+  message = 'Failed to connect to the NØX FastAPI backend.',
   onRetry,
 }) => {
   return (
@@ -23,10 +23,19 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
       <p className="font-sans text-xs text-muted max-w-lg mt-2 leading-relaxed">
         {message}
       </p>
+
+      {/* Cloud Diagnostic Help */}
+      <div className="mt-5 p-3.5 bg-background border border-border max-w-md text-left font-mono text-[11px] text-muted space-y-1.5">
+        <span className="text-chrome font-bold uppercase block tracking-wider">// CLOUD HOSTING DIAGNOSTICS</span>
+        <p className="text-muted/90">• <strong className="text-chrome">Cold Starts:</strong> On Render Free Tier, servers sleep after 15 min idle. Initial spin-up requires ~60-90 seconds.</p>
+        <p className="text-muted/90">• <strong className="text-chrome">Environment:</strong> Verify <span className="text-accent">VITE_API_BASE_URL</span> points to your live Render backend URL in Vercel.</p>
+        <p className="text-muted/90">• <strong className="text-chrome">CORS:</strong> Ensure your Vercel URL is allowed by backend CORS settings.</p>
+      </div>
+
       {onRetry && (
         <button
           onClick={onRetry}
-          className="mt-6 flex items-center gap-2 px-4 py-2 border border-border hover:border-accent text-xs font-mono text-chrome uppercase tracking-wider transition-colors duration-200"
+          className="mt-6 flex items-center gap-2 px-5 py-2.5 bg-accent hover:bg-accent-hover text-white text-xs font-mono uppercase tracking-wider font-semibold transition-colors duration-200"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           RETRY CONNECTION

@@ -68,7 +68,8 @@ async def lifespan(app: FastAPI):
     app.state.event_dao = event_dao
     app.state.detection_service = detection_service
 
-    logger.info("NØX Intrusion Detection Backend is READY. Listening on local interface.")
+    logger.info("NØX Intrusion Detection Backend is READY. Listening on interface.")
+    logger.info("Configured CORS Origins: %s (Regex: %s)", origins, cors_regex)
     yield
     logger.info("NØX Backend is shutting down gracefully.")
 
@@ -86,8 +87,11 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# CORS Configuration restricted to local development frontend origins
-origins = [
+import os
+
+# CORS Configuration
+# Supports local development, custom domains, and Vercel preview/production domains
+default_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
     "http://127.0.0.1:3000",
@@ -96,11 +100,23 @@ origins = [
     "http://127.0.0.1:8000",
 ]
 
+env_cors = os.getenv("CORS_ORIGINS", "")
+origins = list(default_origins)
+if env_cors:
+    for origin in env_cors.split(","):
+        cleaned = origin.strip().rstrip("/")
+        if cleaned and cleaned not in origins:
+            origins.append(cleaned)
+
+# Allow regex for all Vercel deployments (*.vercel.app) by default unless overridden
+cors_regex = os.getenv("CORS_ORIGIN_REGEX", r"^https://.*\.vercel\.app$")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
+    allow_origin_regex=cors_regex if cors_regex else None,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
 
@@ -115,10 +131,11 @@ async def root():
     """Root entrypoint linking to interactive documentation."""
     return {
         "system": "NØX — Neural Network Intrusion Detection System",
-        "module": "Module 03: FastAPI Backend & Threat Logging",
+        "module": "FastAPI Backend & Neural Inference Engine",
         "documentation": "/docs",
         "health": "/api/health",
         "status": "operational",
+        "storage": "SQLite (Ephemeral on Render Free Tier)",
     }
 
 
@@ -152,5 +169,6 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    # Bind strictly to local loopback interface for local dev security
-    uvicorn.run("backend.api.main:app", host="127.0.0.1", port=8000, reload=True)
+    port = int(os.getenv("PORT", "8000"))
+    host = os.getenv("HOST", "0.0.0.0" if os.getenv("RENDER") else "127.0.0.1")
+    uvicorn.run("backend.api.main:app", host=host, port=port, reload=False if os.getenv("RENDER") else True)

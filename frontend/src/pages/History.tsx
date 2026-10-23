@@ -107,6 +107,21 @@ export const History: React.FC = () => {
         </button>
       </div>
 
+      {/* Ephemeral Demo Persistence Notice */}
+      <div className="border border-border bg-surface p-4 flex items-start gap-3">
+        <Database className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 font-mono text-xs text-chrome font-bold uppercase tracking-wider">
+            <span>DEMO TELEMETRY PERSISTENCE</span>
+            <span className="text-[10px] text-muted border border-border px-1.5 py-0.5">SQLITE AUDIT</span>
+          </div>
+          <p className="font-sans text-xs text-muted leading-relaxed">
+            All neural inference results are written to a lightweight SQLite database for review and telemetry aggregation.
+            <span className="text-chrome font-semibold"> Hosting Advisory:</span> When deployed on Render's free tier, local disk storage is ephemeral; audit records reset when the instance restarts or spins down from inactivity.
+          </p>
+        </div>
+      </div>
+
       {/* Filter Toolbar */}
       <div className="p-4 border-industrial bg-surface flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">

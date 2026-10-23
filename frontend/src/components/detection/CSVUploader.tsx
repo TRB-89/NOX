@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { UploadCloud, FileText, AlertCircle, X, CheckCircle2 } from 'lucide-react';
+import { UploadCloud, FileText, AlertCircle, X, CheckCircle2, Download } from 'lucide-react';
 
 interface CSVUploaderProps {
   onUpload: (file: File) => Promise<void>;
@@ -133,9 +133,21 @@ export const CSVUploader: React.FC<CSVUploaderProps> = ({
               <span className="font-sans text-xs text-muted mt-1">
                 or click to browse your computer
               </span>
-              <span className="font-mono text-[10px] text-muted/60 mt-3 border border-border px-2 py-0.5">
-                MAX: 50 MB / UNSW-NB15 SCHEMA
-              </span>
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <span className="font-mono text-[10px] text-muted/60 border border-border px-2 py-0.5">
+                  MAX: 50 MB / UNSW-NB15 SCHEMA
+                </span>
+                <a
+                  href="/sample_network_flows.csv"
+                  download="nox_sample_network_flows.csv"
+                  onClick={(e) => e.stopPropagation()}
+                  className="font-mono text-[10px] text-accent hover:text-white border border-accent/40 hover:border-accent hover:bg-accent/20 px-2 py-0.5 transition-colors flex items-center gap-1 cursor-pointer"
+                  title="Download benchmark UNSW-NB15 sample CSV for immediate testing"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>SAMPLE CSV</span>
+                </a>
+              </div>
             </div>
           )}
         </div>

@@ -179,7 +179,11 @@ export const System: React.FC = () => {
             </div>
             <div className="flex justify-between py-1 border-b border-border/50">
               <span className="text-muted">EVENT STORAGE</span>
-              <span className="text-chrome font-semibold">SQLite (Audit persistence)</span>
+              <span className="text-chrome font-semibold">SQLite (Ephemeral on Render Free Tier)</span>
+            </div>
+            <div className="p-2.5 bg-background border border-border text-[11px] text-muted leading-relaxed">
+              <span className="text-[#d97736] font-bold block uppercase">// PERSISTENCE ADVISORY</span>
+              Render free tier uses an ephemeral filesystem. SQLite audit records persist during active sessions and reset upon redeployment or cold shutdown.
             </div>
           </div>
         </div>

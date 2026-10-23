@@ -38,6 +38,9 @@ describe('Navigation & Layout Components', () => {
     expect(screen.getByText(/Threat Analytics/i)).toBeInTheDocument();
     expect(screen.getByText(/Detection History/i)).toBeInTheDocument();
     expect(screen.getByText(/System Information/i)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/ONLINE/i)).toBeInTheDocument();
+    });
   });
 
   it('renders header with current title and connection status', async () => {

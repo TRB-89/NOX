@@ -97,3 +97,16 @@ def test_stats_endpoint(client):
     assert "predicted_normal_count" in data
     assert "predicted_malicious_count" in data
     assert "severity_distribution" in data
+
+
+def test_cors_preflight_vercel_origin(client):
+    """Verifies that CORS properly permits Vercel domain origins."""
+    headers = {
+        "Origin": "https://nox-neural-ids.vercel.app",
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "Content-Type",
+    }
+    response = client.options("/api/detect", headers=headers)
+    assert response.status_code == 200
+    assert response.headers.get("access-control-allow-origin") == "https://nox-neural-ids.vercel.app"
+

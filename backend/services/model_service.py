@@ -91,8 +91,13 @@ class ModelService:
 
         # 4. Construct and Load PyTorch Model
         try:
+            if self.device.type == "cpu":
+                try:
+                    torch.set_num_threads(2)
+                except Exception:
+                    pass
             self.model = NoxMLP(input_dim=expected_dim).to(self.device)
-            state_dict = torch.load(self.model_weights_path, map_location=self.device)
+            state_dict = torch.load(self.model_weights_path, map_location=self.device, weights_only=True)
             self.model.load_state_dict(state_dict)
             self.model.eval()
         except Exception as e:

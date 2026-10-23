@@ -19,6 +19,7 @@
 - **Module 02**: PyTorch MLP Architecture, Mini-batch Backpropagation, Validation F1 Tracking, Early Stopping, Threshold Tuning, Baseline Comparison, and Neural Prediction Engine.
 - **Module 03**: FastAPI REST Backend, Real-Time Flow Classification, Bounded CSV Uploads, Threat Severity Triage, SQLite Event Logging, and Swagger Telemetry API.
 - **Module 04**: React Frontend & Opium Cyberpunk Telemetry Dashboard with real-time stats, CSV drag-and-drop detection, distribution analytics, audit event viewer, and system diagnostics.
+- **Production Cloud Deployment**: See [DEPLOYMENT.md](file:///c:/Users/TRB/modified%20mindspace%20sdg/CrediAI/NOX/DEPLOYMENT.md) for full instructions on deploying the React + Vite frontend to Vercel and the FastAPI + PyTorch backend to Render.
 
 ---
 

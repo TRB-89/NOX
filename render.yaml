@@ -1,0 +1,21 @@
+# Render Blueprint for NØX - Neural Network Intrusion Detection System
+# Infrastructure-as-Code specification for deploying the FastAPI + PyTorch backend on Render Free Tier.
+
+services:
+  - type: web
+    name: nox-neural-backend
+    runtime: python
+    region: oregon
+    plan: free
+    # Optimize build by installing the CPU-only PyTorch wheel first (~180MB vs 2.2GB CUDA wheel),
+    # preventing container disk exhaustion and build timeouts on Render's 512MB RAM environment.
+    buildCommand: "pip install --upgrade pip && pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && pip install --no-cache-dir -r requirements.txt"
+    startCommand: "uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: "/api/health"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: CORS_ORIGIN_REGEX
+        value: "^https://.*\\.vercel\\.app$"
+      - key: CORS_ORIGINS
+        value: "http://localhost:5173,http://localhost:3000"

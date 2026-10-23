@@ -16,8 +16,10 @@ import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
 import { EmptyState } from '../components/common/EmptyState';
 import { BarChart3, PieChart as PieIcon, ShieldAlert, Award, AlertCircle, Info } from 'lucide-react';
+import { useBackend } from '../services/BackendContext';
 
 export const Analytics: React.FC = () => {
+  const { refreshKey, retryConnection, isChecking } = useBackend();
   const [stats, setStats] = useState<TelemetryStats | null>(null);
   const [events, setEvents] = useState<DetectionEvent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -42,14 +44,25 @@ export const Analytics: React.FC = () => {
 
   useEffect(() => {
     fetchAnalyticsData();
-  }, []);
+  }, [refreshKey]);
+
+  const handleRetry = async () => {
+    await retryConnection();
+    await fetchAnalyticsData();
+  };
 
   if (isLoading) {
     return <LoadingState message="COMPUTING THREAT ANALYTICS & HISTOGRAMS..." />;
   }
 
   if (error && !stats) {
-    return <ErrorState message={error} onRetry={fetchAnalyticsData} />;
+    return (
+      <ErrorState
+        message={error}
+        onRetry={handleRetry}
+        isRetrying={isChecking}
+      />
+    );
   }
 
   const hasData = (stats?.total_records_analyzed ?? 0) > 0;

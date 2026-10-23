@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Menu, Terminal, Radio, RefreshCw } from 'lucide-react';
-import { api } from '../../services/api';
-import { HealthStatus } from '../../types';
+import React, { useState, useEffect } from 'react';
+import { Menu, Terminal, RefreshCw, AlertTriangle } from 'lucide-react';
+import { useBackend } from '../../services/BackendContext';
 
 interface HeaderProps {
   title: string;
@@ -11,32 +10,15 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ title, subtitle, onOpenMobileNav }) => {
   const [timeStr, setTimeStr] = useState<string>('');
-  const [health, setHealth] = useState<HealthStatus | null>(null);
-  const [isChecking, setIsChecking] = useState<boolean>(false);
-
-  const checkHealth = useCallback(async () => {
-    setIsChecking(true);
-    try {
-      const data = await api.getHealth();
-      setHealth(data);
-    } catch {
-      setHealth({
-        status: 'error',
-        model_loaded: false,
-        model_version: 'Offline',
-        threshold: null,
-        device: null,
-      });
-    } finally {
-      setIsChecking(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    checkHealth();
-    const interval = setInterval(checkHealth, 15000);
-    return () => clearInterval(interval);
-  }, [checkHealth]);
+  const {
+    health,
+    isOnline,
+    isChecking,
+    isColdStarting,
+    coldStartAttempt,
+    checkHealth,
+    wakeUpBackend,
+  } = useBackend();
 
   useEffect(() => {
     const updateTime = () => {
@@ -62,8 +44,6 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, onOpenMobileNav
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
-
-  const isConnected = health?.status === 'ready' && health.model_loaded;
 
   return (
     <>
@@ -97,22 +77,34 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, onOpenMobileNav
         <div className="flex items-center gap-3 sm:gap-4">
           {/* Backend Connection Indicator & Trigger */}
           <button
-            onClick={checkHealth}
-            disabled={isChecking}
-            className="flex items-center gap-2 border border-border px-2.5 py-1.5 bg-surface font-mono text-xs hover:border-chrome transition-colors cursor-pointer"
-            title={isConnected ? 'Backend connected and operational (click to re-verify)' : 'Backend offline or spinning up. Click to ping.'}
+            onClick={() => (isOnline ? checkHealth(true) : wakeUpBackend())}
+            disabled={isChecking || isColdStarting}
+            className="flex items-center gap-2 border border-border px-2.5 py-1.5 bg-surface font-mono text-xs hover:border-chrome transition-colors cursor-pointer disabled:opacity-50"
+            title={
+              isOnline
+                ? 'Backend connected and operational (click to re-verify)'
+                : isColdStarting
+                ? `Waking up backend (attempt ${coldStartAttempt}/5)...`
+                : 'Backend offline. Click to wake up or ping server.'
+            }
           >
             <span
               className={`w-2 h-2 rounded-full ${
-                isChecking
+                isChecking || isColdStarting
                   ? 'bg-accent animate-ping'
-                  : isConnected
+                  : isOnline
                   ? 'bg-success animate-pulse'
                   : 'bg-critical'
               }`}
             />
             <span className="text-[11px] text-chrome font-semibold uppercase hidden sm:inline">
-              {isChecking ? 'PROBING...' : isConnected ? 'ONLINE' : 'OFFLINE'}
+              {isColdStarting
+                ? `WAKING UP (${coldStartAttempt}/5)`
+                : isChecking
+                ? 'PROBING...'
+                : isOnline
+                ? 'ONLINE'
+                : 'OFFLINE'}
             </span>
           </button>
 
@@ -125,21 +117,35 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, onOpenMobileNav
       </header>
 
       {/* Backend Offline / Render Cold Start Telemetry Banner */}
-      {health && !isConnected && (
+      {health && !isOnline && (
         <div className="bg-critical/10 border-b border-critical/30 px-6 py-2.5 font-mono text-xs flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-critical font-medium">
             <span className="w-2 h-2 rounded-full bg-critical animate-ping shrink-0" />
             <span>
-              [BACKEND OFFLINE] Neural inference server is unreachable. If using Render free tier, allow 60–90 seconds for cold start.
+              {isColdStarting ? (
+                <>
+                  [WAKING UP BACKEND] Neural engine is spinning up on Render Free Tier (attempt {coldStartAttempt}/5, ~60s boot time). Telemetry will auto-sync upon ready...
+                </>
+              ) : (
+                <>
+                  [BACKEND OFFLINE] Neural inference server unreachable. If hosted on Render Free Tier, instance sleeps after 15m idle.
+                </>
+              )}
             </span>
           </div>
           <button
-            onClick={checkHealth}
-            disabled={isChecking}
-            className="text-chrome hover:text-white uppercase font-bold tracking-wider text-[11px] underline flex items-center gap-1.5 shrink-0 cursor-pointer"
+            onClick={() => wakeUpBackend()}
+            disabled={isChecking || isColdStarting}
+            className="text-chrome hover:text-white uppercase font-bold tracking-wider text-[11px] underline flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
           >
-            <RefreshCw className={`w-3 h-3 ${isChecking ? 'animate-spin' : ''}`} />
-            <span>{isChecking ? 'PROBING...' : 'WAKE UP BACKEND'}</span>
+            <RefreshCw className={`w-3 h-3 ${isChecking || isColdStarting ? 'animate-spin' : ''}`} />
+            <span>
+              {isColdStarting
+                ? `SPINNING UP (${coldStartAttempt}/5)...`
+                : isChecking
+                ? 'PROBING...'
+                : 'WAKE UP BACKEND'}
+            </span>
           </button>
         </div>
       )}

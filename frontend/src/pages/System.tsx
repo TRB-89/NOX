@@ -16,11 +16,16 @@ import {
   Code2,
 } from 'lucide-react';
 
+import { useBackend } from '../services/BackendContext';
+
 export const System: React.FC = () => {
+  const { baseUrl, setCustomBaseUrl, resetCustomBaseUrl, refreshKey, wakeUpBackend } = useBackend();
   const [health, setHealth] = useState<HealthStatus | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [pingTimeMs, setPingTimeMs] = useState<number | null>(null);
+  const [customUrlInput, setCustomUrlInput] = useState<string>(baseUrl);
+  const [configSuccessMsg, setConfigSuccessMsg] = useState<string | null>(null);
 
   const fetchHealth = async () => {
     setIsLoading(true);
@@ -42,7 +47,27 @@ export const System: React.FC = () => {
 
   useEffect(() => {
     fetchHealth();
-  }, []);
+    const resolved = typeof api?.getBaseUrl === 'function' ? api.getBaseUrl() : 'http://127.0.0.1:8000';
+    setCustomUrlInput(resolved);
+  }, [refreshKey]);
+
+  const handleApplyCustomUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!customUrlInput.trim()) return;
+    setCustomBaseUrl(customUrlInput.trim());
+    setConfigSuccessMsg(`Active backend updated to: ${customUrlInput.trim()}`);
+    setTimeout(() => setConfigSuccessMsg(null), 4000);
+    fetchHealth();
+  };
+
+  const handleResetUrl = () => {
+    resetCustomBaseUrl();
+    const resolved = typeof api?.getBaseUrl === 'function' ? api.getBaseUrl() : 'http://127.0.0.1:8000';
+    setCustomUrlInput(resolved);
+    setConfigSuccessMsg(`Backend URL reset to default: ${resolved}`);
+    setTimeout(() => setConfigSuccessMsg(null), 4000);
+    fetchHealth();
+  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
@@ -143,6 +168,74 @@ export const System: React.FC = () => {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Active Backend Hosting & Telemetry Routing */}
+      <div className="border-industrial bg-surface p-6 space-y-4">
+        <div className="flex items-center justify-between pb-3 border-b border-border">
+          <div className="flex items-center gap-2">
+            <Server className="w-4 h-4 text-chrome" />
+            <h3 className="font-display text-sm font-bold uppercase tracking-tight text-chrome">
+              BACKEND CONNECTIVITY & ENDPOINT CONFIGURATION
+            </h3>
+          </div>
+          <span className="font-mono text-[10px] uppercase border border-border px-2 py-0.5 text-muted">
+            NETWORK LAYER
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+          <div className="p-3 bg-surface-elevated border border-border space-y-2">
+            <span className="text-[10px] text-muted uppercase block">RESOLVED TARGET BACKEND URL</span>
+            <span className="text-chrome font-bold block break-all">{baseUrl}</span>
+            <span className="text-[10px] text-muted block">
+              Probing: <code>{baseUrl}/health</code> and <code>{baseUrl}/api/health</code>
+            </span>
+          </div>
+
+          <div className="p-3 bg-surface-elevated border border-border space-y-2">
+            <span className="text-[10px] text-muted uppercase block">BUILD-TIME VITE_API_BASE_URL</span>
+            <span className="text-chrome font-bold block">
+              {(import.meta.env.VITE_API_BASE_URL as string) || '(Not defined — using safe cloud fallback)'}
+            </span>
+            <span className="text-[10px] text-muted block">
+              Client Mode: {import.meta.env.DEV ? 'Local Development' : 'Production Build'}
+            </span>
+          </div>
+        </div>
+
+        {configSuccessMsg && (
+          <div className="p-2.5 bg-success/10 border border-success/40 text-success font-mono text-xs">
+            {configSuccessMsg}
+          </div>
+        )}
+
+        {/* Dynamic Backend URL Override Tool */}
+        <form onSubmit={handleApplyCustomUrl} className="pt-2 flex flex-col sm:flex-row gap-2">
+          <div className="flex-1 flex items-center border border-border bg-background px-3 py-2">
+            <Terminal className="w-3.5 h-3.5 text-muted mr-2 shrink-0" />
+            <input
+              type="text"
+              value={customUrlInput}
+              onChange={(e) => setCustomUrlInput(e.target.value)}
+              placeholder="https://your-custom-backend.onrender.com"
+              className="w-full bg-transparent text-chrome font-mono text-xs focus:outline-none"
+            />
+          </div>
+          <button
+            type="submit"
+            className="px-4 py-2 bg-accent hover:bg-accent-hover text-white font-mono text-xs uppercase font-semibold transition-colors shrink-0"
+          >
+            UPDATE BACKEND URL
+          </button>
+          <button
+            type="button"
+            onClick={handleResetUrl}
+            className="px-4 py-2 border border-border text-chrome hover:border-chrome font-mono text-xs uppercase transition-colors shrink-0"
+          >
+            RESET
+          </button>
+        </form>
       </div>
 
       {/* Static Technical Architecture Grid */}

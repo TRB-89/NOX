@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { 
   ShieldAlert, 
@@ -9,8 +9,7 @@ import {
   Radio, 
   X 
 } from 'lucide-react';
-import { api } from '../../services/api';
-import { HealthStatus } from '../../types';
+import { useBackend } from '../../services/BackendContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,34 +17,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const [health, setHealth] = useState<HealthStatus | null>(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    const checkHealth = async () => {
-      try {
-        const data = await api.getHealth();
-        if (isMounted) setHealth(data);
-      } catch {
-        if (isMounted) {
-          setHealth({
-            status: 'error',
-            model_loaded: false,
-            model_version: 'Offline',
-            threshold: null,
-            device: null,
-          });
-        }
-      }
-    };
-
-    checkHealth();
-    const interval = setInterval(checkHealth, 15000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
-  }, []);
+  const { health, isOnline } = useBackend();
 
   const navItems = [
     { num: '01', label: 'Overview', to: '/', icon: Activity },
@@ -54,8 +26,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     { num: '04', label: 'Detection History', to: '/history', icon: Clock },
     { num: '05', label: 'System Information', to: '/system', icon: Cpu },
   ];
-
-  const isConnected = health?.status === 'ready' && health.model_loaded;
 
   return (
     <>
@@ -137,11 +107,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             <div className="flex items-center gap-1.5">
               <span
                 className={`w-1.5 h-1.5 rounded-full ${
-                  isConnected ? 'bg-success animate-pulse' : 'bg-critical'
+                  isOnline ? 'bg-success animate-pulse' : 'bg-critical'
                 }`}
               />
               <span className="font-mono text-[10px] text-chrome uppercase">
-                {isConnected ? 'ONLINE' : 'OFFLINE'}
+                {isOnline ? 'ONLINE' : 'OFFLINE'}
               </span>
             </div>
           </div>

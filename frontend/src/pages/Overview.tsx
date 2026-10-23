@@ -9,9 +9,11 @@ import { SeverityChart } from '../components/dashboard/SeverityChart';
 import { RecentAlerts } from '../components/dashboard/RecentAlerts';
 import { LoadingState } from '../components/common/LoadingState';
 import { ErrorState } from '../components/common/ErrorState';
+import { useBackend } from '../services/BackendContext';
 
 export const Overview: React.FC = () => {
   const navigate = useNavigate();
+  const { refreshKey, retryConnection, isChecking } = useBackend();
   const [stats, setStats] = useState<TelemetryStats | null>(null);
   const [recentEvents, setRecentEvents] = useState<DetectionEvent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -36,14 +38,25 @@ export const Overview: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, [refreshKey]);
+
+  const handleRetry = async () => {
+    await retryConnection();
+    await fetchDashboardData();
+  };
 
   if (isLoading && !stats) {
     return <LoadingState message="ACQUIRING NEURAL METRICS & AUDIT LOGS..." />;
   }
 
   if (error && !stats) {
-    return <ErrorState message={error} onRetry={fetchDashboardData} />;
+    return (
+      <ErrorState
+        message={error}
+        onRetry={handleRetry}
+        isRetrying={isChecking}
+      />
+    );
   }
 
   const highSeverityCount = stats?.severity_distribution?.High ?? 0;

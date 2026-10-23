@@ -70,6 +70,7 @@ This guide documents the end-to-end cloud deployment procedure for the **NÃ˜X â€
      ```bash
      uvicorn backend.api.main:app --host 0.0.0.0 --port $PORT
      ```
+   - **Health Check Path:** `/health` *(or `/api/health`)*
 4. Under **Environment Variables**, add:
    - `PYTHON_VERSION` = `3.11.9`
    - `CORS_ORIGIN_REGEX` = `^https://.*\.vercel\.app$`

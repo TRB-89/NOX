@@ -30,13 +30,18 @@ def test_root_endpoint(client):
 
 
 def test_health_endpoint(client):
-    """Verifies that /api/health reports ready and loaded model."""
-    response = client.get("/api/health")
-    assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "ready"
-    assert data["model_loaded"] is True
-    assert "NØX-MLP" in data["model_version"]
+    """Verifies that both /api/health and /health report ready and loaded model."""
+    for path in ["/api/health", "/health"]:
+        response = client.get(path)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ready"
+        assert data["model_loaded"] is True
+        assert "NØX-MLP" in data["model_version"]
+
+    # Verify lightweight HEAD check
+    head_resp = client.head("/health")
+    assert head_resp.status_code == 200
 
 
 def test_detect_endpoint_single(client):
@@ -109,4 +114,17 @@ def test_cors_preflight_vercel_origin(client):
     response = client.options("/api/detect", headers=headers)
     assert response.status_code == 200
     assert response.headers.get("access-control-allow-origin") == "https://nox-neural-ids.vercel.app"
+
+
+def test_cors_preflight_health_endpoint(client):
+    """Verifies CORS preflight on root /health and /api/health for Vercel preview deployments."""
+    headers = {
+        "Origin": "https://nox-preview-xyz123.vercel.app",
+        "Access-Control-Request-Method": "GET",
+        "Access-Control-Request-Headers": "Content-Type",
+    }
+    for path in ["/api/health", "/health"]:
+        response = client.options(path, headers=headers)
+        assert response.status_code == 200
+        assert response.headers.get("access-control-allow-origin") == "https://nox-preview-xyz123.vercel.app"
 

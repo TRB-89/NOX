@@ -6,7 +6,10 @@ import { api } from '../services/api';
 import { CSVUploadResponse } from '../types';
 import { Shield, Cpu, AlertCircle, FileCheck, Layers } from 'lucide-react';
 
+import { useBackend } from '../services/BackendContext';
+
 export const Detection: React.FC = () => {
+  const { triggerRefresh } = useBackend();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadResults, setUploadResults] = useState<CSVUploadResponse | null>(null);
@@ -17,6 +20,7 @@ export const Detection: React.FC = () => {
     try {
       const response = await api.uploadCSV(file);
       setUploadResults(response);
+      triggerRefresh();
     } catch (err: any) {
       setError(err.message || 'CSV upload and inference analysis failed.');
       setUploadResults(null);

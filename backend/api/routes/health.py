@@ -19,6 +19,13 @@ async def get_health(request: Request) -> HealthResponseSchema:
     """Returns application readiness, model version, and computation device."""
     model_service = getattr(request.app.state, "model_service", None)
 
+    # Self-healing recovery attempt if model artifacts were not loaded at cold boot
+    if model_service is not None and not model_service.is_loaded:
+        try:
+            model_service.load_artifacts()
+        except Exception:
+            pass
+
     if model_service is not None and model_service.is_loaded:
         info = model_service.get_info()
         return HealthResponseSchema(

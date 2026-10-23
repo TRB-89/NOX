@@ -16,8 +16,10 @@ import {
   X,
   Database,
 } from 'lucide-react';
+import { useBackend } from '../services/BackendContext';
 
 export const History: React.FC = () => {
+  const { refreshKey, retryConnection, isChecking } = useBackend();
   const [events, setEvents] = useState<DetectionEvent[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export const History: React.FC = () => {
 
   useEffect(() => {
     fetchHistory(1, sourceTypeFilter);
-  }, [sourceTypeFilter]);
+  }, [sourceTypeFilter, refreshKey]);
 
   // Client-side filtering scoped to the loaded batch
   const filteredEvents = events.filter((evt) => {
@@ -185,7 +187,14 @@ export const History: React.FC = () => {
       {isLoading && events.length === 0 ? (
         <LoadingState message="FETCHING HISTORICAL AUDIT ENTRIES..." />
       ) : error ? (
-        <ErrorState message={error} onRetry={() => fetchHistory(page, sourceTypeFilter)} />
+        <ErrorState
+          message={error}
+          onRetry={async () => {
+            await retryConnection();
+            await fetchHistory(page, sourceTypeFilter);
+          }}
+          isRetrying={isChecking}
+        />
       ) : events.length === 0 ? (
         <EmptyState
           title="NO AUDIT RECORDS FOUND"

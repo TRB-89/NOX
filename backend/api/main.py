@@ -25,9 +25,10 @@ from backend.database.db import init_db
 from backend.database.models import DetectionEventDAO
 from backend.services.model_service import ModelService
 from backend.services.detection_service import DetectionService
-from backend.api.routes.health import router as health_router
+from backend.api.routes.health import router as health_router, get_health
 from backend.api.routes.detection import router as detection_router
 from backend.api.routes.history import router as history_router
+from backend.api.schemas.detection_schema import HealthResponseSchema
 
 # Configure backend logging
 logs_dir = Path(__file__).resolve().parent.parent / "logs"
@@ -88,16 +89,21 @@ app = FastAPI(
 )
 
 import os
+import re
 
 # CORS Configuration
 # Supports local development, custom domains, and Vercel preview/production domains
 default_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
+    "http://localhost:4173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "http://127.0.0.1:4173",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://[::1]:5173",
+    "http://[::1]:3000",
 ]
 
 env_cors = os.getenv("CORS_ORIGINS", "")
@@ -110,15 +116,36 @@ if env_cors:
 
 # Allow regex for all Vercel deployments (*.vercel.app) by default unless overridden
 cors_regex = os.getenv("CORS_ORIGIN_REGEX", r"^https://.*\.vercel\.app$")
+if cors_regex:
+    cors_regex = cors_regex.strip()
+    # Normalize double-escaped dots or backslashes from YAML / environment injection
+    # e.g., '^https://.*\\.vercel\\.app$' -> '^https://.*\.vercel\.app$'
+    cors_regex = cors_regex.replace("\\\\.", "\\.")
+    cors_regex = cors_regex.replace("\\\\", "\\")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_origin_regex=cors_regex if cors_regex else None,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS", "HEAD"],
+    allow_methods=["GET", "POST", "OPTIONS", "HEAD", "PUT", "DELETE", "PATCH"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,
 )
+
+# Root-level lightweight health check (required by standard cloud load balancers & monitors)
+@app.get(
+    "/health",
+    response_model=HealthResponseSchema,
+    tags=["System Health"],
+    summary="Lightweight System Health Check",
+    description="Confirms backend readiness, model loading state, and runtime environment.",
+)
+@app.head("/health", tags=["System Health"], include_in_schema=False)
+async def health_check_root(request: Request) -> HealthResponseSchema:
+    """Lightweight root-level health check endpoint returning identical schema to /api/health."""
+    return await get_health(request)
 
 # Include API Routers
 app.include_router(health_router)
@@ -133,7 +160,8 @@ async def root():
         "system": "NØX — Neural Network Intrusion Detection System",
         "module": "FastAPI Backend & Neural Inference Engine",
         "documentation": "/docs",
-        "health": "/api/health",
+        "health": "/health",
+        "api_health": "/api/health",
         "status": "operational",
         "storage": "SQLite (Ephemeral on Render Free Tier)",
     }
@@ -170,5 +198,6 @@ async def generic_exception_handler(request: Request, exc: Exception):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", "8000"))
-    host = os.getenv("HOST", "0.0.0.0" if os.getenv("RENDER") else "127.0.0.1")
-    uvicorn.run("backend.api.main:app", host=host, port=port, reload=False if os.getenv("RENDER") else True)
+    is_cloud = bool(os.getenv("RENDER") or os.getenv("PORT"))
+    host = os.getenv("HOST", "0.0.0.0" if is_cloud else "127.0.0.1")
+    uvicorn.run("backend.api.main:app", host=host, port=port, reload=False if is_cloud else True)
